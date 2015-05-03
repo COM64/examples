@@ -1,5 +1,7 @@
 .include "basicmacros.h"
 
+DEBUG=1
+
 SCREENCLEAR=$E544
 
 .scope SCREEN
@@ -45,18 +47,21 @@ busyloop:
 	jmp busyloop
 
 keskeytys:
+.if DEBUG
+	inc $D020
+.endif
 	dec delaycounter
 	bne exitirq
 	lda #01
 	sta delaycounter
 	
-;Scroll text
+;Scroll text by one pixel
 	dec xoffset
 	bpl nooverflow
 	lda #07
 	sta xoffset
 	
-	;Scroll text
+	;Scroll text by one character
 	ldx #$00
 seuraavamerkki:
 	;Kopioi seuraava merkki nykyisen tilalle
@@ -85,6 +90,9 @@ nooverflow:
 	sta SCREEN::XSCROLL
 exitirq:
 	asl $D019
+.if DEBUG
+	dec $D020
+.endif
 	jmp $EA31
 
 xoffset:
