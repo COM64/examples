@@ -1,31 +1,32 @@
 CPU = 6502
-CA = ca65
+#         Lisää myös paikalliset symbolit debug-infoon
+AS = ca65 -g
+ASFLAGS = --cpu $(CPU)
 LD = ld65
-CONFIG = config.cfg
-LABELS = labels.txt
+LDFLAGS = -m labels.txt -Ln symbols -C config.cfg
+C1541 = c1541
 
-DISKNAME = skrolli
-DISKID = 12
+OBJS = \
+	skrolli.o \
+	music.o
+
 DISKFILENAME = skrolli.d64
+DISKNAME = skrolli
+ID = 15
 
 all: d64
 
-skrolli.prg: skrolli.asm
-	$(CA) --cpu $(CPU) skrolli.asm
-	$(LD) -m $(LABELS) -C $(CONFIG) skrolli.o
+skrolli: $(OBJS)
+	$(LD) $(LDFLAGS) $(OBJS)
 
-d64: skrolli.prg
-	# Alusta levyimage
-	c1541 -format $(DISKNAME),$(DISKID) d64 $(DISKFILENAME)
-	# Kopioi tiedosto levyimageen
-	c1541 -attach $(DISKFILENAME) -write skrolli.prg
-	# Näytä hakemisto
-	c1541 -attach $(DISKFILENAME) -list
+d64: skrolli
+	$(C1541) -format $(DISKNAME),$(ID) d64 $(DISKFILENAME)
+	$(C1541) -attach $(DISKFILENAME) -write skrolli.prg
+	$(C1541) -attach $(DISKFILENAME) -list
 
+run: d64
+#           Lataa koodissa määritellyt labelit VICE:n monitoriin. Myös esim. "d .init" toimii suoran osoitteen sijaan
+	x64 -moncommands symbols $(DISKFILENAME)
+	
 clean:
-	rm -f *~
-	rm -f $(LABELS)
-	rm -f *.o
-	rm -f *~
-	rm -f skrolli.prg
-	rm -f $(DISKFILENAME)
+	rm *.o skrolli.prg labels.txt symbols $(DISKFILENAME)

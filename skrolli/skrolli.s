@@ -1,4 +1,5 @@
 .include "basicmacros.h"
+.include "music.h"
 
 DEBUG=1
 
@@ -43,6 +44,8 @@ setup:
 	lda #%0000001
 	sta $D01A
 ;	rts
+        jsr MusicStart
+
 busyloop:
 	jmp busyloop
 
@@ -50,6 +53,7 @@ keskeytys:
 .if DEBUG
 	inc $D020
 .endif
+	jsr MusicPlay
 	dec delaycounter
 	bne exitirq
 	lda #01
